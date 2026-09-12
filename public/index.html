@@ -1,5 +1,5 @@
 <!doctype html><html lang="ko"><head><meta name="color-scheme" content="only light"><meta name="supported-color-schemes" content="light"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>ASTRA TACTICS v0.16.7</title><style>
+<title>ASTRA TACTICS v0.18.4</title><style>
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#302044,#100b18 45%,#060509);color:#f8f5ff;font-family:system-ui,-apple-system,sans-serif}button{font:inherit}#app{max-width:1100px;margin:auto;padding:7px}.panel{background:#100b18ed;border:1px solid #604c76;border-radius:16px;overflow:hidden}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}.logo{font:900 23px Georgia;color:#ffe39a;letter-spacing:.08em}.sub{font-size:11px;color:#b9aec6}.btn{border:1px solid #705986;background:#261a35;color:white;border-radius:9px;padding:9px 12px;font-weight:800}.gold{background:#61471d;border-color:#d0a84f;color:#fff1bd}.hidden{display:none!important}h2{text-align:center}.deckgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;padding:12px}.deck{background:#181020;color:#fff;border:1px solid #6f5789;border-radius:14px;overflow:hidden;padding:0;text-align:left}.deckhero{height:150px;position:relative;background-size:cover;background-position:center 32%;background-repeat:no-repeat}.deckhero:after{content:"";position:absolute;inset:0;background:linear-gradient(transparent,#130d1c)}.deckbody{padding:10px}.deckname{font:900 19px Georgia}.desc{font-size:11px;color:#cbbfd5}.hero{display:flex;justify-content:space-between;align-items:center;padding:7px 10px}.badges{display:flex;gap:5px;margin-top:3px}.badge{border:1px solid #493854;border-radius:99px;padding:3px 7px;font-size:11px}.turn{text-align:center;color:#ffe49a;font-weight:900;padding:6px;border-block:1px solid #33263e}.field{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;padding:6px;min-height:143px}.slot{min-height:128px;border:1px dashed #463553;border-radius:10px;display:flex;align-items:center}.card{position:relative;width:100%;min-height:126px;background:#21162f;border:2px solid #77608e;border-radius:10px;overflow:hidden;box-shadow:0 5px 13px #0008}.card.ready{box-shadow:0 0 15px #f0d36488}.card.sel{outline:3px solid #ffe36e}.card.unplay{filter:brightness(.45) saturate(.55)}.art{height:68px;background-size:cover;background-position:center 42%;background-repeat:no-repeat}.cost{position:absolute;top:3px;left:3px;z-index:2;background:#315fcd;border:2px solid #dbe5ff;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:950}.spell .cost{background:#6c33bd}.info{padding:4px 5px}.name{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.text{font-size:8px;color:#cec4d7;min-height:18px}.stats{display:flex;justify-content:space-between;font-size:11px;font-weight:900}.hand{display:flex;overflow:auto;gap:5px;padding:6px;min-height:145px;border-top:1px solid #33263e}.hand .card{min-width:100px;width:100px;min-height:154px}.hand .art{height:92px}.hand .info{padding:3px 5px}.hand .text{min-height:0;line-height:1.12;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.controls{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;padding:8px;border-top:1px solid #33263e}.log{height:100px;overflow:auto;padding:7px 10px;background:#07060a;font-size:11px;color:#cabfd4}.fx{position:fixed;z-index:90;pointer-events:none;font-size:40px;animation:pop .55s ease-out forwards}@keyframes pop{0%{transform:scale(.3);opacity:0}35%{transform:scale(1.5);opacity:1}100%{transform:translateY(-45px);opacity:0}}.overlay{position:fixed;inset:0;background:#000c;display:none;place-items:center;z-index:50;padding:20px}.overlay.show{display:grid}.modal{background:#171020;border:1px solid #705889;border-radius:16px;padding:20px;text-align:center;max-width:430px}.editor{padding:10px}.tabs{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}.statsbar{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:9px}.curve{display:flex;gap:3px;align-items:end;height:54px;justify-content:center}.bar{width:18px;background:#7955b2;border-radius:3px 3px 0 0;min-height:2px}.editGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}.editCard{background:#191124;border:1px solid #57436a;border-radius:9px;overflow:hidden}.editArt{height:64px;background-size:cover;background-position:center 42%;background-repeat:no-repeat}.editBody{padding:6px}.count{display:flex;gap:4px;align-items:center;margin-top:4px}.count button{width:28px;height:28px;padding:0}.savebar{position:sticky;bottom:0;background:#0d0914ed;padding:9px;text-align:center}
 @media(max-width:720px){.deckgrid{grid-template-columns:1fr}.deckhero{height:135px}.field{min-height:118px}.slot{min-height:112px}.card{min-height:112px}.art{height:50px}.text{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:7px;line-height:1.18;min-height:17px;color:#d7cde0}.hand .card{min-width:104px;width:104px;min-height:150px}.hand .art{height:88px}.hand .info{padding:3px 5px}.hand .name{font-size:10px}.hand .text{display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:7px;line-height:1.1;min-height:0}.hand{min-height:166px}.editGrid{grid-template-columns:repeat(2,1fr)}}
 .f-knight{background:linear-gradient(145deg,#5a4523,#1c1820 70%);color:#ffe2a1}.f-elf{background:linear-gradient(145deg,#245c3c,#101b16 70%);color:#a8f0bd}.f-mage{background:linear-gradient(145deg,#50328c,#171024 70%);color:#d7c3ff}.spellArt{background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.18),transparent 35%),linear-gradient(145deg,#4b287a,#15101e)}.unitArt{background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.16),transparent 34%),linear-gradient(145deg,#3f344b,#17121f)}
@@ -153,6 +153,110 @@ img,.deckhero,.art,.editArt,.card,.deck,.panel{forced-color-adjust:none!importan
 
 /* v0.18.3 knight portrait normalization */
 .fcard-knight .art{background-position:center 40%!important}
+
+
+/* === v0.18.4 OPTION A BATTLEFIELD POLISH === */
+/* Keep the board dark and clean; gold is used only for structure/turn emphasis. */
+#game{
+  border-color:#7a6748;
+  background:
+    radial-gradient(ellipse at 50% 43%,rgba(32,72,112,.22),transparent 38%),
+    radial-gradient(ellipse at 50% 74%,rgba(118,79,31,.08),transparent 34%),
+    linear-gradient(180deg,#08101df8 0%,#080b14fb 49%,#05080dfc 100%);
+  box-shadow:0 24px 80px #000d,inset 0 0 0 1px rgba(237,199,112,.08),inset 0 1px rgba(255,255,255,.06);
+}
+#game:after{
+  content:"";position:absolute;inset:5px;pointer-events:none;z-index:0;border:1px solid rgba(207,168,86,.18);border-radius:17px;
+  box-shadow:inset 0 0 45px rgba(38,83,128,.08);
+}
+#game .hero{
+  background:
+    linear-gradient(90deg,rgba(9,18,34,.97),rgba(15,28,47,.93) 48%,rgba(8,15,28,.97));
+  border-color:#4a5870;
+  box-shadow:inset 0 -1px rgba(224,190,111,.08);
+}
+#game .hero>div>b{color:#f3dfb4;letter-spacing:.035em}
+
+/* Field panels */
+#game .field{
+  position:relative;
+  margin:7px 9px;
+  padding:12px 12px;
+  border:1px solid rgba(190,153,78,.52);
+  border-radius:17px;
+  background:
+    linear-gradient(180deg,rgba(10,22,39,.88),rgba(5,12,23,.92)),
+    radial-gradient(ellipse at 50% 45%,rgba(57,115,167,.11),transparent 64%);
+  box-shadow:inset 0 0 0 1px rgba(120,171,220,.07),inset 0 0 35px rgba(26,66,104,.14),0 5px 18px rgba(0,0,0,.34);
+}
+#game #ef{border-color:rgba(125,151,184,.46)}
+#game #pf{border-color:rgba(197,160,83,.56)}
+#game .slot{
+  position:relative;overflow:hidden;
+  border:1px solid rgba(87,119,157,.58);
+  background:
+    linear-gradient(180deg,rgba(14,29,49,.72),rgba(5,12,23,.86)),
+    radial-gradient(circle at 50% 45%,rgba(73,128,183,.09),transparent 56%);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.018),inset 0 0 28px rgba(0,0,0,.5);
+}
+#game .slot:empty:before{
+  content:"";position:absolute;left:50%;top:50%;width:40px;height:40px;transform:translate(-50%,-50%) rotate(45deg);
+  border:1px solid rgba(94,146,198,.13);border-radius:8px;box-shadow:0 0 18px rgba(58,126,191,.05);
+}
+#game .slot:empty:after{
+  content:"✦";position:absolute;left:50%;top:50%;transform:translate(-50%,-53%);font-size:22px;line-height:1;
+  color:rgba(104,159,211,.15);text-shadow:0 0 12px rgba(80,142,202,.12);
+}
+
+/* Turn banner – Option A gold restraint */
+#game .turn{
+  position:relative;margin:0 9px;padding:12px 54px;
+  border:0;border-top:1px solid rgba(194,151,66,.48);border-bottom:1px solid rgba(194,151,66,.48);
+  background:
+    radial-gradient(ellipse at center,rgba(142,98,31,.16),transparent 48%),
+    linear-gradient(90deg,transparent,rgba(24,28,39,.98) 12%,rgba(29,25,35,.99) 50%,rgba(24,28,39,.98) 88%,transparent);
+  color:#f5d989;font-size:18px;letter-spacing:.08em;
+  text-shadow:0 0 13px rgba(229,185,82,.32);
+}
+#game .turn:before,#game .turn:after{
+  content:"✦";position:absolute;top:50%;transform:translateY(-53%);color:#c9a55f;font-size:15px;opacity:.82;text-shadow:0 0 10px rgba(220,176,84,.28);
+}
+#game .turn:before{left:28px}#game .turn:after{right:28px}
+
+/* Cards: subtle premium frame, card art stays dominant */
+#game .field .card{border-color:#857658;border-width:1px;box-shadow:0 8px 22px #000a,inset 0 0 0 1px rgba(255,255,255,.035)}
+#game .hand .card{border-color:#817156;border-width:1px}
+#game .card.ready{border-color:#d7b65f;box-shadow:0 0 0 1px rgba(244,211,125,.7),0 0 18px rgba(215,178,81,.34),0 9px 24px #000b}
+#game .card.sel{outline:2px solid #9bdcff;outline-offset:1px;box-shadow:0 0 20px rgba(72,176,255,.55),0 9px 24px #000b}
+
+/* Cost readability: hand -20%, battlefield ~-36% */
+#game .hand .cost{
+  top:4px;left:4px;width:25px;height:25px;border-width:1.5px;font-size:13px;
+  box-shadow:0 1px 6px #000b,0 0 6px rgba(54,125,255,.28);
+}
+#game .field .cost{
+  top:4px;left:4px;width:20px;height:20px;border-width:1px;font-size:10px;
+  box-shadow:0 1px 4px #000b,0 0 5px rgba(54,125,255,.20);
+}
+#game .field .spell .cost{box-shadow:0 1px 4px #000b,0 0 5px rgba(142,73,215,.18)}
+
+/* Controls/log: quieter, so board/cards remain the focus */
+#game .controls{background:linear-gradient(180deg,#060a11,#03060b);border-top-color:#29394e}
+#game .log{background:linear-gradient(180deg,#03060b,#020408);color:#aeb9c8}
+#game .controls .btn{border-color:#52647d;background:linear-gradient(180deg,#233047,#101826)}
+#game .controls .gold{border-color:#c9a14a;background:linear-gradient(180deg,#816020,#412d0d)}
+
+@media(max-width:720px){
+  #game:after{inset:3px;border-radius:12px}
+  #game .field{margin:5px 5px;padding:7px 6px;border-radius:12px;gap:5px}
+  #game .slot:empty:before{width:28px;height:28px;border-radius:6px}
+  #game .slot:empty:after{font-size:16px}
+  #game .turn{margin:0 5px;padding:9px 34px;font-size:15px;letter-spacing:.055em}
+  #game .turn:before{left:16px}#game .turn:after{right:16px}
+  #game .hand .cost{width:24px;height:24px;font-size:12px;top:4px;left:4px}
+  #game .field .cost{width:18px;height:18px;font-size:9px;top:3px;left:3px}
+}
+
 </style></head><body><div id="app"><div class="top"><div><div class="logo">ASTRA TACTICS</div><div class="sub">v0.17.5 · 최신 복구 + 기사 25장 / 7진영 · 175종 HD 카드 / ONLINE 1:1</div></div><button id="back" class="btn hidden">메뉴</button></div>
 <section id="menu" class="panel"><h2>진영 선택</h2>
 <div class="tabs"><button class="btn gold" onclick="openOnlineLobby()">온라인 1:1 대전</button><button class="btn" onclick="openEditor()">덱 직접 편집</button></div>
@@ -200,7 +304,7 @@ const mercStyle=document.createElement('style');
 mercStyle.textContent=`.f-merc{background:linear-gradient(145deg,#8c6222,#1f1509 72%);color:#ffe7ad}.deckhero[data-f="merc"]{background-position:50% 28%!important;filter:saturate(1.06) contrast(1.05)!important}.fcard-merc{border-color:#b98a39}`;
 document.head.appendChild(mercStyle);
 document.querySelector('#editor .tabs')?.insertAdjacentHTML('beforeend',`<button class="btn" onclick="editFaction('merc')">용병 길드</button>`);
-document.querySelector('.top .sub').textContent='v0.18.1 · 경량 아트 + 용병 밸런스 패치 / 8진영 · 200종 HD 카드 / ONLINE 1:1';
+document.querySelector('.top .sub').textContent='v0.18.4 · A안 전장 UI + 코스트 축소 / 8진영 · 200종 HD 카드 / ONLINE 1:1';
 
 let MULLIGAN_ACTIVE=false,mulliganMode='',mulliganSelected=new Set();
 let ONLINE=false,onlineWS=null,onlineRoom='',onlineSlot='',onlineFaction='',onlineSelected=null,onlinePlayerKey=localStorage.getItem('astraOnlineKey')||('');
