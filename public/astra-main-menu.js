@@ -1,6 +1,7 @@
 (() => {
   const CONFIG = {
     background: './astra-main-bg.webp',
+    backgroundMobile: './astra-main-bg-mobile.webp',
     fadeMs: 520
   };
 
@@ -13,19 +14,17 @@
   }
   #astra-main-menu.astra-leaving{opacity:0;filter:brightness(.42) blur(1.5px);pointer-events:none}
 
-  /* Keep the 16:9 artwork and the click zones locked together at every viewport size. */
+  /* Desktop keeps the existing 16:9 composition exactly as-is. */
   .astra-stage{
     position:absolute;left:50%;top:50%;
     width:max(100vw,177.7778vh);height:max(100vh,56.25vw);
     transform:translate(-50%,-50%);overflow:hidden;
   }
   .astra-bg{
-    position:absolute;inset:-2.2%;
+    position:absolute;inset:0;
     background-image:linear-gradient(rgba(1,5,10,.025),rgba(1,5,10,.09)),url('${CONFIG.background}');
-    background-position:center;background-size:cover;background-repeat:no-repeat;
-    transform:scale(1.018);
-    animation:astraBreath 24s ease-in-out infinite alternate;
-    will-change:transform;
+    background-position:center;background-size:100% 100%;background-repeat:no-repeat;
+    animation:astraBgPulse 8s ease-in-out infinite alternate;
   }
   .astra-vignette{
     position:absolute;inset:0;pointer-events:none;
@@ -64,27 +63,33 @@
     filter:blur(12px);animation:astraGlow 6.2s ease-in-out infinite;
   }
 
-  /* The artwork contains the visible menu chrome. These are the real HTML click targets. */
+  /* The picture already has its own ornate borders. The real buttons stay invisible,
+     so tapping no longer leaves a second rounded rectangle outside the artwork. */
   .astra-hit{
-    position:absolute;border:0;background:transparent;cursor:pointer;border-radius:18px;
-    outline:none;-webkit-tap-highlight-color:transparent;
-    touch-action:manipulation;
+    position:absolute;border:0;background:transparent;cursor:pointer;
+    outline:none!important;-webkit-tap-highlight-color:transparent!important;
+    touch-action:manipulation;padding:0;
   }
   .astra-hit::after{
-    content:"";position:absolute;inset:0;border-radius:inherit;
-    border:1px solid transparent;box-shadow:0 0 0 rgba(245,212,142,0);
-    transition:border-color .18s ease,box-shadow .18s ease,background .18s ease,transform .18s ease;
+    content:"";position:absolute;inset:9%;pointer-events:none;
+    opacity:0;border:0;
+    background:radial-gradient(ellipse at center,rgba(255,231,178,.12),rgba(255,224,154,.025) 58%,transparent 78%);
+    box-shadow:inset 0 0 20px rgba(255,224,154,.06),0 0 18px rgba(236,196,112,.10);
+    transition:opacity .14s ease,transform .14s ease,filter .14s ease;
+    clip-path:polygon(5% 0,95% 0,100% 18%,100% 82%,95% 100%,5% 100%,0 82%,0 18%);
   }
-  .astra-hit:hover::after,.astra-hit:focus-visible::after{
-    border-color:rgba(255,229,169,.62);
-    box-shadow:0 0 22px rgba(236,196,112,.25),inset 0 0 18px rgba(255,229,169,.07);
-    background:rgba(255,235,190,.022);transform:scale(1.012);
+  @media (hover:hover) and (pointer:fine){
+    .astra-hit:hover::after{opacity:.62;filter:brightness(1.12)}
+    .astra-hit:focus-visible::after{opacity:.72;filter:brightness(1.18)}
   }
-  .astra-hit:active::after{transform:scale(.985);background:rgba(255,230,170,.05)}
-  .astra-start{left:36.0%;top:53.1%;width:28.0%;height:10.2%}
-  .astra-deck{left:35.0%;top:68.1%;width:14.1%;height:7.8%}
-  .astra-cards{left:50.2%;top:68.1%;width:14.2%;height:7.8%}
-  .astra-settings{left:46.4%;top:77.3%;width:7.5%;height:5.9%;border-radius:10px}
+  .astra-hit:active::after{opacity:.78;transform:scale(.975);filter:brightness(1.18)}
+
+  /* Desktop hit zones: tightened to the visible gold frames. */
+  .astra-start{left:35.9%;top:53.0%;width:26.9%;height:10.3%}
+  .astra-deck{left:35.3%;top:68.8%;width:13.5%;height:6.9%}
+  .astra-cards{left:50.0%;top:68.8%;width:13.5%;height:6.9%}
+  .astra-settings{left:47.2%;top:78.2%;width:6.0%;height:4.7%}
+  .astra-settings::after{inset:0;clip-path:ellipse(50% 48% at 50% 50%)}
 
   .astra-toast{
     position:fixed;left:50%;bottom:4.5%;z-index:3;
@@ -96,13 +101,30 @@
   }
   .astra-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-  @keyframes astraBreath{
-    0%{transform:scale(1.018) translate3d(-.12%,0,0)}
-    100%{transform:scale(1.033) translate3d(.16%,-.14%,0)}
-  }
+  @keyframes astraBgPulse{0%{filter:brightness(.985)}100%{filter:brightness(1.025)}}
   @keyframes astraStarDrift{to{transform:translate3d(2.2%,-1.4%,0)}}
   @keyframes astraTwinkle{0%{opacity:.17}100%{opacity:.56}}
   @keyframes astraGlow{0%,100%{opacity:.52;transform:translate(-50%,-50%) scale(.98)}50%{opacity:.90;transform:translate(-50%,-50%) scale(1.04)}}
+
+  /* Portrait phones get a dedicated portrait crop. PC never enters this rule. */
+  @media (max-width:900px) and (orientation:portrait){
+    .astra-stage{left:0;top:0;width:100%;height:100%;transform:none}
+    .astra-bg{
+      background-image:linear-gradient(rgba(1,5,10,.018),rgba(1,5,10,.075)),url('${CONFIG.backgroundMobile}');
+      background-position:center;background-size:100% 100%;
+    }
+    .astra-glow{top:31%;width:72%;height:19%}
+
+    /* Mobile zones match the portrait artwork instead of the desktop crop. */
+    .astra-start{left:19.0%;top:53.0%;width:59.1%;height:10.3%}
+    .astra-deck{left:17.7%;top:68.8%;width:29.7%;height:6.9%}
+    .astra-cards{left:49.9%;top:68.8%;width:29.6%;height:6.9%}
+    .astra-settings{left:44.0%;top:78.2%;width:13.1%;height:4.7%}
+    .astra-hit::after{inset:7%}
+    .astra-settings::after{inset:0}
+    .astra-toast{bottom:max(3.2%,env(safe-area-inset-bottom));max-width:82vw;text-align:center}
+  }
+
   @media(prefers-reduced-motion:reduce){
     .astra-bg,.astra-stars,.astra-stars:before,.astra-stars:after,.astra-glow{animation:none!important}
   }`;
