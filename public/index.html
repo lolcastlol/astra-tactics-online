@@ -259,7 +259,7 @@ img,.deckhero,.art,.editArt,.card,.deck,.panel{forced-color-adjust:none!importan
   #game .field .cost{width:18px;height:18px;font-size:9px;top:3px;left:3px}
 }
 
-</style></head><body><div id="app"><div class="top"><div><div class="logo">ASTRA TACTICS</div><div class="sub">v0.19.9 · 천공의 용군단 25종 일러스트 적용 / 9진영 · 225종 카드 / ONLINE 1:1</div></div><button id="back" class="btn hidden">메뉴</button></div>
+</style></head><body><div id="app"><div class="top"><div><div class="logo">ASTRA TACTICS</div><div class="sub">v0.20.2 · BGM/SFX 적용 / 9진영 · 225종 카드 / ONLINE 1:1</div></div><div style="display:flex;gap:6px"><button id="soundToggle" class="btn" title="BGM/효과음 켜기·끄기">🔊</button><button id="back" class="btn hidden">메뉴</button></div></div>
 <section id="menu" class="panel"><h2>진영 선택</h2>
 <div class="tabs"><button class="btn gold" onclick="openOnlineLobby()">온라인 1:1 대전</button><button class="btn" onclick="openEditor()">덱 직접 편집</button></div>
 <div class="diffbox"><div class="difftitle">AI 난이도</div><div class="diffrow"><button class="diffbtn" data-diff="easy" onclick="setDifficulty('easy')">쉬움</button><button class="diffbtn" data-diff="normal" onclick="setDifficulty('normal')">보통</button><button class="diffbtn" data-diff="hard" onclick="setDifficulty('hard')">어려움</button><button class="diffbtn" data-diff="nightmare" onclick="setDifficulty('nightmare')">악몽</button></div><div id="diffnote" class="diffnote"></div></div><div class="deckgrid" id="deckgrid"></div></section>
@@ -334,21 +334,20 @@ function onlineMessage(m){if(m.type==='error'){lg&&lg(m.message);$('#roomInfo').
  if(m.type==='lobby'){let a=m.players?.a,b=m.players?.b;$('#p1State').textContent=!a?.connected?'대기':a.ready?(FACTIONS[a.faction]?.name||'준비 완료'):'접속';$('#p2State').textContent=!b?.connected?'대기':b.ready?(FACTIONS[b.faction]?.name||'준비 완료'):'접속';$('#p1State').className=a?.ready?'onlineReady':a?.connected?'onlineWaiting':'';$('#p2State').className=b?.ready?'onlineReady':b?.connected?'onlineWaiting':'';if(a?.connected&&b?.connected)$('#roomInfo').textContent='두 명 접속 완료 · 덱을 선택하세요.';return}
  if(m.type==='state'){applyOnlineState(m);return}
  if(m.type==='event'){if(m.sound)sfx(m.sound);if(m.text&&ONLINE)lg(m.text);return}}
-function onlineReady(f){if(!onlineWS||onlineWS.readyState!==1)return $('#roomInfo').textContent='먼저 방에 연결하세요.';let deck=custom[f];if(!Array.isArray(deck)||deck.length!==30)return $('#roomInfo').textContent='이 덱은 30장이 아닙니다. 덱 편집에서 먼저 완성하세요.';onlineFaction=f;sfx('click');onlineWS.send(JSON.stringify({type:'ready',faction:f,deck}));$('#roomInfo').textContent=FACTIONS[f].name+' 준비 완료 · 상대를 기다리는 중...'}window.onlineReady=onlineReady;
+function onlineReady(f){if(!onlineWS||onlineWS.readyState!==1)return $('#roomInfo').textContent='먼저 방에 연결하세요.';let deck=custom[f];if(!Array.isArray(deck)||deck.length!==30)return $('#roomInfo').textContent='이 덱은 30장이 아닙니다. 덱 편집에서 먼저 완성하세요.';onlineFaction=f;sfx('deck');onlineWS.send(JSON.stringify({type:'ready',faction:f,deck}));$('#roomInfo').textContent=FACTIONS[f].name+' 준비 완료 · 상대를 기다리는 중...'}window.onlineReady=onlineReady;
 function onlineSend(action){if(onlineWS&&onlineWS.readyState===1)onlineWS.send(JSON.stringify(action))}
-function applyOnlineState(m){ONLINE=true;pending=null;let me=m.me,op=m.opp;S={active:m.turnMine?'p':'e',turn:m.turn||1,sel:onlineSelected,p:{hp:me.hp,max:me.max,mana:me.mana,hand:(me.hand||[]).map(hydrateOnlineCard),field:(me.field||[]).map(hydrateOnlineCard),deck:Array(me.deckCount||0),grave:[],fatigue:me.fatigue||0},e:{hp:op.hp,max:op.max,mana:op.mana,hand:Array(op.handCount||0),field:(op.field||[]).map(hydrateOnlineCard),deck:Array(op.deckCount||0),grave:[],fatigue:op.fatigue||0}};$('#onlineLobby').classList.add('hidden');$('#menu').classList.add('hidden');$('#editor').classList.add('hidden');$('#game').classList.remove('hidden');$('#back').classList.remove('hidden');$('#heroName').textContent=FACTIONS[me.faction]?.hero||'PLAYER';$('#enemyName').textContent=FACTIONS[op.faction]?.name||'상대';$('#enemyType').textContent='ONLINE';$('#aiDiffBadge').textContent='['+onlineRoom+']';render();if(m.phase==='mulligan'){if(m.mulliganDone)showMulligan('online-wait');else showMulligan('online');}else if(MULLIGAN_ACTIVE)hideMulligan();if(m.winner){hideMulligan();let win=m.winner===onlineSlot;sfx(win?'victory':'defeat');$('#result').textContent=win?'승리!':'패배';$('#resultText').textContent=win?'온라인 대전에서 승리했습니다.':'온라인 대전에서 패배했습니다.';$('#over').className='overlay show'}else $('#over').className='overlay'}
+function applyOnlineState(m){ONLINE=true;pending=null;let me=m.me,op=m.opp;S={active:m.turnMine?'p':'e',turn:m.turn||1,sel:onlineSelected,p:{hp:me.hp,max:me.max,mana:me.mana,hand:(me.hand||[]).map(hydrateOnlineCard),field:(me.field||[]).map(hydrateOnlineCard),deck:Array(me.deckCount||0),grave:[],fatigue:me.fatigue||0},e:{hp:op.hp,max:op.max,mana:op.mana,hand:Array(op.handCount||0),field:(op.field||[]).map(hydrateOnlineCard),deck:Array(op.deckCount||0),grave:[],fatigue:op.fatigue||0}};$('#onlineLobby').classList.add('hidden');$('#menu').classList.add('hidden');$('#editor').classList.add('hidden');$('#game').classList.remove('hidden');$('#back').classList.remove('hidden');startBgm('battle');setMusicLevel(.11);$('#heroName').textContent=FACTIONS[me.faction]?.hero||'PLAYER';$('#enemyName').textContent=FACTIONS[op.faction]?.name||'상대';$('#enemyType').textContent='ONLINE';$('#aiDiffBadge').textContent='['+onlineRoom+']';render();if(m.phase==='mulligan'){if(m.mulliganDone)showMulligan('online-wait');else showMulligan('online');}else if(MULLIGAN_ACTIVE)hideMulligan();if(m.winner){hideMulligan();let win=m.winner===onlineSlot;sfx(win?'victory':'defeat');$('#result').textContent=win?'승리!':'패배';$('#resultText').textContent=win?'온라인 대전에서 승리했습니다.':'온라인 대전에서 패배했습니다.';$('#over').className='overlay show'}else $('#over').className='overlay'}
 function copyRoomCode(){navigator.clipboard?.writeText(onlineRoom);$('#roomInfo').textContent='방 코드 '+onlineRoom+' 복사 완료'}window.copyRoomCode=copyRoomCode;
 window.createOnlineRoom=createOnlineRoom;window.joinOnlineRoom=joinOnlineRoom;
 
-let SOUND_ON=true,audioCtx=null,masterGain=null;
+let SOUND_ON=localStorage.getItem('astraSound')!=='off',audioCtx=null,masterGain=null,musicGain=null,bgmTheme='',bgmTimer=null;
 function ensureAudio(){
   if(!SOUND_ON)return null;
   try{
     if(!audioCtx){
       audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-      masterGain=audioCtx.createGain();
-      masterGain.gain.value=.34;
-      masterGain.connect(audioCtx.destination);
+      masterGain=audioCtx.createGain();masterGain.gain.value=.34;masterGain.connect(audioCtx.destination);
+      musicGain=audioCtx.createGain();musicGain.gain.value=.10;musicGain.connect(masterGain);
     }
     if(audioCtx.state==='suspended')audioCtx.resume();
     return audioCtx;
@@ -359,9 +358,7 @@ function tone(freq=440,dur=.08,type='sine',vol=.18,delay=0,slide=0){
   let o=c.createOscillator(),g=c.createGain(),t=c.currentTime+delay;
   o.type=type;o.frequency.setValueAtTime(freq,t);
   if(slide)o.frequency.exponentialRampToValueAtTime(Math.max(40,freq+slide),t+dur);
-  g.gain.setValueAtTime(.0001,t);
-  g.gain.exponentialRampToValueAtTime(Math.max(.001,vol),t+.008);
-  g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(Math.max(.001,vol),t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   o.connect(g);g.connect(masterGain);o.start(t);o.stop(t+dur+.02);
 }
 function noise(dur=.08,vol=.08,delay=0,highpass=0){
@@ -370,13 +367,46 @@ function noise(dur=.08,vol=.08,delay=0,highpass=0){
   for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*(1-i/n);
   let s=c.createBufferSource(),g=c.createGain(),t=c.currentTime+delay;s.buffer=buf;
   if(highpass){let f=c.createBiquadFilter();f.type='highpass';f.frequency.value=highpass;s.connect(f);f.connect(g)}else s.connect(g);
-  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
-  g.connect(masterGain);s.start(t);
+  g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);g.connect(masterGain);s.start(t);
 }
+function musicTone(freq,dur=1,type='sine',vol=.08,delay=0){
+  let c=ensureAudio();if(!c||!musicGain)return;
+  let o=c.createOscillator(),g=c.createGain(),t=c.currentTime+delay;
+  o.type=type;o.frequency.setValueAtTime(freq,t);g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+.08);g.gain.setValueAtTime(vol,t+Math.max(.1,dur-.22));g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g);g.connect(musicGain);o.start(t);o.stop(t+dur+.03);
+}
+function musicPhrase(theme){
+  if(!SOUND_ON||bgmTheme!==theme)return;
+  if(theme==='menu'){
+    [293.66,349.23,440,523.25,440,349.23,329.63,392].forEach((f,i)=>musicTone(f,.82,'sine',.055,i*.72));
+    musicTone(146.83,2.9,'triangle',.035,0);musicTone(174.61,2.9,'triangle',.028,2.9);
+  }else{
+    [146.83,146.83,174.61,196,130.81,146.83,220,196].forEach((f,i)=>musicTone(f,.34,'triangle',.045,i*.46));
+    [293.66,349.23,392,440,392,349.23,293.66,261.63].forEach((f,i)=>musicTone(f,.50,'sine',.032,i*.46+.12));
+    musicTone(73.42,1.7,'sawtooth',.018,0);musicTone(87.31,1.7,'sawtooth',.016,1.84);
+  }
+}
+function startBgm(theme){
+  if(!SOUND_ON)return;ensureAudio();
+  if(bgmTimer)clearInterval(bgmTimer);bgmTheme=theme;musicPhrase(theme);
+  bgmTimer=setInterval(()=>musicPhrase(theme),theme==='menu'?5760:3680);
+}
+function setMusicLevel(v){let c=ensureAudio();if(c&&musicGain)musicGain.gain.setTargetAtTime(v,c.currentTime,.12)}
+function stopBgm(){if(bgmTimer)clearInterval(bgmTimer);bgmTimer=null;bgmTheme=''}
+function updateSoundButton(){let b=document.getElementById('soundToggle');if(b)b.textContent=SOUND_ON?'🔊':'🔇'}
+function toggleSound(){
+  SOUND_ON=!SOUND_ON;localStorage.setItem('astraSound',SOUND_ON?'on':'off');updateSoundButton();
+  if(!SOUND_ON){stopBgm();if(masterGain&&audioCtx)masterGain.gain.setTargetAtTime(.0001,audioCtx.currentTime,.05);return}
+  let c=ensureAudio();if(masterGain)masterGain.gain.setTargetAtTime(.34,c.currentTime,.05);startBgm(document.getElementById('game')?.classList.contains('hidden')?'menu':'battle');
+}window.toggleSound=toggleSound;
 function sfx(kind){
-  if(!SOUND_ON)return;
-  ensureAudio();
+  if(!SOUND_ON)return;ensureAudio();
   if(kind==='click'){tone(620,.035,'sine',.06);tone(820,.025,'sine',.035,.02)}
+  else if(kind==='deck'){tone(392,.10,'triangle',.08);tone(587,.13,'sine',.075,.055);tone(784,.18,'sine',.06,.12);noise(.06,.025,.03,1200)}
+  else if(kind==='mulliganOpen'){tone(260,.18,'sine',.045,0,180);tone(520,.22,'triangle',.05,.06,260);tone(780,.26,'sine',.035,.12,-120)}
+  else if(kind==='mulliganPick'){noise(.055,.055,0,1500);tone(760,.045,'sine',.055,.018,-90)}
+  else if(kind==='mulliganConfirm'){noise(.14,.07,0,500);tone(170,.18,'triangle',.10,0,260);tone(520,.20,'sine',.07,.08,350)}
+  else if(kind==='battleStart'){tone(110,.28,'sawtooth',.08);tone(220,.28,'triangle',.07,.04);tone(440,.30,'sine',.055,.08);noise(.11,.045,.02,650)}
   else if(kind==='summon'){tone(170,.11,'triangle',.15,0,210);tone(360,.10,'sine',.09,.055,180);noise(.06,.035,.02,400)}
   else if(kind==='attack'){noise(.055,.16,0,850);tone(130,.075,'sawtooth',.16,0,-55);tone(82,.09,'square',.06,.03)}
   else if(kind==='spell'){tone(520,.14,'sine',.11,0,380);tone(760,.18,'triangle',.08,.045,-210);noise(.12,.035,.02,1200)}
@@ -386,7 +416,8 @@ function sfx(kind){
   else if(kind==='victory'){[523,659,784,1047].forEach((f,i)=>tone(f,.24,'triangle',.10,i*.09))}
   else if(kind==='defeat'){tone(330,.20,'sawtooth',.08,0,-90);tone(220,.25,'triangle',.08,.12,-70)}
 }
-document.addEventListener('pointerdown',()=>{if(SOUND_ON)ensureAudio()},{once:true});
+updateSoundButton();document.getElementById('soundToggle')?.addEventListener('click',toggleSound);
+document.addEventListener('pointerdown',()=>{if(SOUND_ON){ensureAudio();startBgm(document.getElementById('game')?.classList.contains('hidden')?'menu':'battle')}},{once:true});
 
 let custom=(()=>{try{let d=structuredClone(DEFAULT),n=JSON.parse(localStorage.getItem('astraDecks10')||'null');if(n)for(let f of FKEYS)if(Array.isArray(n[f])&&n[f].length===30)d[f]=n[f];let o=JSON.parse(localStorage.getItem('astraDecks08')||'null');if(o)for(let f of ['knight','elf','mage'])if(!n?.[f]&&Array.isArray(o[f])&&o[f].length===30)d[f]=o[f];return d}catch(e){return structuredClone(DEFAULT)}})();
 function deckHero(f){return DECK_SELECT_ART[f]}
@@ -426,16 +457,16 @@ function summon(side,c){let me=S[side],en=S[side==='p'?'e':'p'],pack=(me.played|
 if(c.f==='dragon'&&awake){if(c.awakeSelfA||c.awakeSelfH){c.a+=c.awakeSelfA||0;c.h+=c.awakeSelfH||0;c.maxh+=c.awakeSelfH||0}if(c.awakeShield)c.shield=Math.max(1,c.shield||0);if(c.awakeCharge)c.ready=true}
 if(c.f==='dragon'&&(c.otherDragonBuffA||c.otherDragonBuffH||c.otherDragonShield)){let has=me.field.some(x=>x!==c&&x.h>0&&x.f==='dragon');if(has){c.a+=c.otherDragonBuffA||0;c.h+=c.otherDragonBuffH||0;c.maxh+=c.otherDragonBuffH||0;if(c.otherDragonShield)c.shield=Math.max(1,c.shield||0)}}
 if(c.f==='beast'&&me.nextBuff){c.a+=me.nextBuff;c.h+=me.nextBuff;c.maxh+=me.nextBuff}if(pack&&c.packSelfA){c.a+=c.packSelfA;c.h+=c.packSelfH||0;c.maxh+=c.packSelfH||0}if(c.charge||(pack&&c.packCharge))c.ready=true;if(c.selfDamage)damageHero(side,c.selfDamage);if(c.heal)healHero(side,c.heal);if(c.face)damageHero(side==='p'?'e':'p',c.face);if(c.f==='dragon'&&awake&&c.awakeFace)damageHero(side==='p'?'e':'p',c.awakeFace);if(pack&&c.packFace)damageHero(side==='p'?'e':'p',c.packFace);if(c.aoe)en.field.forEach(x=>dealUnitDamage(x,c.aoe,side,c));if(c.teamBuff)me.field.forEach(x=>{if(x!==c){x.a+=c.teamBuff;x.h+=c.teamBuff;x.maxh+=c.teamBuff}});if(c.teamDragonAttack)me.field.forEach(x=>{if(x!==c&&x.f==='dragon')x.a+=c.teamDragonAttack});if(c.teamBeastAttack)me.field.forEach(x=>{if(x!==c&&x.f==='beast')x.a+=c.teamBeastAttack});if(c.teamBeastBuff)me.field.forEach(x=>{if(x!==c&&x.f==='beast'){x.a+=c.teamBeastBuff;x.h+=c.teamBeastBuff;x.maxh+=c.teamBeastBuff}});if(pack&&c.packTeamBuff)me.field.forEach(x=>{if(x!==c){x.a+=c.packTeamBuff;x.h+=c.packTeamBuff;x.maxh+=c.packTeamBuff}});if(c.draw)draw(side,c.draw);if(c.f==='dragon'&&awake&&c.awakeDraw)draw(side,c.awakeDraw);if(pack&&c.packDraw)draw(side,c.packDraw);if(pack&&c.packDamage&&en.field.length){let x=[...en.field].sort((a,b)=>aiThreat(b)-aiThreat(a))[0];dealUnitDamage(x,c.packDamage,side,c)}if(c.summonTokensOnPlay)summonToken(side,c.tokenName||'늑대 수인',c.tokenA||2,c.tokenH||2,c.tokenArt||c.art,c.summonTokensOnPlay,{f:c.tokenFaction||c.f});if(c.repairAll)me.field.forEach(x=>x.h=Math.min(x.maxh||x.h,x.h+c.repairAll));if(c.summonDamage&&en.field.length){let x=[...en.field].sort((a,b)=>aiThreat(b)-aiThreat(a))[0];dealUnitDamage(x,c.summonDamage,side,c)}if(c.summonFreeze&&en.field.length){let x=[...en.field].sort((a,b)=>aiThreat(b)-aiThreat(a))[0];if(c.f==='dragon'&&awake&&c.awakeDamage)dealUnitDamage(x,c.awakeDamage,side,c);x.frozen=1;x.ready=false}if(c.summonResurrectDragon)resurrectDragon(side,c.summonResurrectDragon,c.maxCost||4);if(c.killWeakHp){let q=en.field.filter(x=>x.h<=c.killWeakHp).sort((a,b)=>aiThreat(b)-aiThreat(a))[0];if(q)destroyUnit(q)}if(c.killStrong&&en.field.length){let x=[...en.field].sort((a,b)=>(b.a+b.h)-(a.a+a.h))[0];destroyUnit(x);lg(c.n+' → '+x.n+' 제거')}clean()}
-function finish(){if(S.p.hp>0&&S.e.hp>0)return false;let w=S.e.hp<=0&&S.p.hp>0;sfx(w?'victory':'defeat');$('#result').textContent=w?'승리!':'패배';$('#resultText').textContent=w?'교환과 자원 운영으로 승리했습니다.':'덱 구성과 교환 타이밍을 조정해보세요.';$('#over').className='overlay show';return true}
+function finish(){if(S.p.hp>0&&S.e.hp>0)return false;let w=S.e.hp<=0&&S.p.hp>0;setMusicLevel(.035);sfx(w?'victory':'defeat');$('#result').textContent=w?'승리!':'패배';$('#resultText').textContent=w?'교환과 자원 운영으로 승리했습니다.':'덱 구성과 교환 타이밍을 조정해보세요.';$('#over').className='overlay show';return true}
 function shuffleInstances(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function mulliganReplaceLocal(side,uids){let p=S[side],set=new Set(uids),returned=p.hand.filter(c=>set.has(c.u));if(!returned.length)return 0;p.hand=p.hand.filter(c=>!set.has(c.u));for(let i=0;i<returned.length;i++){if(p.deck.length)p.hand.push(p.deck.pop())}p.deck=shuffleInstances([...p.deck,...returned]);return returned.length}
 function aiOpeningMulligan(){if(!S?.e)return;let opening=S.e.hand.slice(0,3),swap=opening.filter(c=>c.c>=4).map(c=>c.u);mulliganReplaceLocal('e',swap)}
 function renderMulligan(){let box=$('#mulliganCards'),btn=$('#mulliganConfirm'),count=$('#mulliganCount');if(!box||!S)return;box.innerHTML='';let waiting=mulliganMode==='online-wait';S.p.hand.slice(0,3).forEach(c=>{let d=document.createElement('div');d.className='mulliganPick'+(mulliganSelected.has(c.u)?' selected':'')+(waiting?' locked':'');d.innerHTML=`<div class="mulliganArt" style="background-image:url('${c.art}')"></div><div class="mulliganBody"><div class="mulliganName">${c.n}</div><div class="mulliganMeta">${c.c}코${c.type==='unit'?` · ⚔ ${c.a} / ♥ ${c.h}`:' · 주문'}</div><div class="mulliganEffect">${c.role?`【${c.role}】 `:``}${c.t}</div></div>`;if(!waiting)d.onclick=()=>toggleMulligan(c.u);box.appendChild(d)});let n=mulliganSelected.size;count.textContent=waiting?'내 멀리건 완료 · 상대 선택을 기다리는 중입니다.':(n?`${n}장 교체 선택`:'교체하지 않고 그대로 시작할 수도 있습니다.');btn.disabled=waiting;btn.textContent=waiting?'상대 멀리건 대기 중...':(n?`${n}장 교체`:'이 손패로 시작')}
-function showMulligan(mode='single'){if(!MULLIGAN_ACTIVE||mulliganMode!==mode)mulliganSelected.clear();MULLIGAN_ACTIVE=true;mulliganMode=mode;$('#mulligan').className='overlay show';$('#mulliganTitle').textContent=mode==='online-wait'?'멀리건 완료':'시작 손패 교체';$('#mulliganNote').textContent=mode==='online-wait'?'상대도 시작 손패를 정리하고 있습니다. 두 플레이어가 모두 완료하면 바로 시작합니다.':'바꾸고 싶은 카드를 선택하세요. 선택한 카드는 새 카드를 받은 뒤 덱에 다시 섞여 같은 카드가 즉시 다시 나오지 않습니다.';renderMulligan();render()}
-function hideMulligan(){MULLIGAN_ACTIVE=false;mulliganMode='';mulliganSelected.clear();let o=$('#mulligan');if(o)o.className='overlay'}
-function toggleMulligan(uid){if(!MULLIGAN_ACTIVE||mulliganMode==='online-wait')return;if(mulliganSelected.has(uid))mulliganSelected.delete(uid);else mulliganSelected.add(uid);renderMulligan()}window.toggleMulligan=toggleMulligan;
-$('#mulliganConfirm').onclick=()=>{if(!MULLIGAN_ACTIVE)return;let uids=[...mulliganSelected];if(ONLINE){$('#mulliganConfirm').disabled=true;$('#mulliganConfirm').textContent='처리 중...';onlineSend({type:'mulligan',uids});return}let n=mulliganReplaceLocal('p',uids);hideMulligan();lg(n?`시작 손패 ${n}장 교체 완료`:'시작 손패 유지');sfx('turn');render()};
-function startGame(f){sfx('click');chosen=f;uid=1;pending=null;hideMulligan();let pool=FKEYS.filter(x=>x!==f),ef=pool[Math.floor(Math.random()*pool.length)],dc=DIFF[difficulty];S={active:'p',turn:1,sel:null,firstAI:true,difficulty:difficulty,p:{hp:40,max:1,mana:1,deck:shuffle(custom[f]),hand:[],field:[],grave:[],fatigue:0,played:0,nextBuff:0},e:{hp:40,max:0,mana:0,deck:shuffle(custom[ef]),hand:[],field:[],grave:[],fatigue:0,played:0,nextBuff:0}};for(let i=0;i<3;i++){draw('p');draw('e')}for(let i=0;i<dc.bonusCard;i++)draw('e');aiOpeningMulligan();$('#menu').classList.add('hidden');$('#editor').classList.add('hidden');$('#game').classList.remove('hidden');$('#back').classList.remove('hidden');$('#over').className='overlay';$('#heroName').textContent=FACTIONS[f].hero;$('#enemyName').textContent=FACTIONS[ef].name;$('#enemyType').textContent='AI';$('#aiDiffBadge').textContent='['+dc.name+']';$('#log').innerHTML='';lg('전투 준비 · 상대 '+FACTIONS[ef].name+' · AI '+dc.name+(dc.bonusCard?' · AI 시작 패 +'+dc.bonusCard:''));render();setTimeout(()=>showMulligan('single'),80)}window.startGame=startGame;
+function showMulligan(mode='single'){if(!MULLIGAN_ACTIVE||mulliganMode!==mode)mulliganSelected.clear();MULLIGAN_ACTIVE=true;mulliganMode=mode;if(mode!=='online-wait')sfx('mulliganOpen');setMusicLevel(.055);$('#mulligan').className='overlay show';$('#mulliganTitle').textContent=mode==='online-wait'?'멀리건 완료':'시작 손패 교체';$('#mulliganNote').textContent=mode==='online-wait'?'상대도 시작 손패를 정리하고 있습니다. 두 플레이어가 모두 완료하면 바로 시작합니다.':'바꾸고 싶은 카드를 선택하세요. 선택한 카드는 새 카드를 받은 뒤 덱에 다시 섞여 같은 카드가 즉시 다시 나오지 않습니다.';renderMulligan();render()}
+function hideMulligan(){MULLIGAN_ACTIVE=false;mulliganMode='';mulliganSelected.clear();let o=$('#mulligan');if(o)o.className='overlay';if(!$('#game').classList.contains('hidden'))setMusicLevel(.11)}
+function toggleMulligan(uid){if(!MULLIGAN_ACTIVE||mulliganMode==='online-wait')return;if(mulliganSelected.has(uid))mulliganSelected.delete(uid);else mulliganSelected.add(uid);sfx('mulliganPick');renderMulligan()}window.toggleMulligan=toggleMulligan;
+$('#mulliganConfirm').onclick=()=>{if(!MULLIGAN_ACTIVE)return;sfx('mulliganConfirm');let uids=[...mulliganSelected];if(ONLINE){$('#mulliganConfirm').disabled=true;$('#mulliganConfirm').textContent='처리 중...';onlineSend({type:'mulligan',uids});return}let n=mulliganReplaceLocal('p',uids);hideMulligan();lg(n?`시작 손패 ${n}장 교체 완료`:'시작 손패 유지');sfx('turn');render()};
+function startGame(f){sfx('deck');startBgm('battle');setMusicLevel(.11);chosen=f;uid=1;pending=null;hideMulligan();let pool=FKEYS.filter(x=>x!==f),ef=pool[Math.floor(Math.random()*pool.length)],dc=DIFF[difficulty];S={active:'p',turn:1,sel:null,firstAI:true,difficulty:difficulty,p:{hp:40,max:1,mana:1,deck:shuffle(custom[f]),hand:[],field:[],grave:[],fatigue:0,played:0,nextBuff:0},e:{hp:40,max:0,mana:0,deck:shuffle(custom[ef]),hand:[],field:[],grave:[],fatigue:0,played:0,nextBuff:0}};for(let i=0;i<3;i++){draw('p');draw('e')}for(let i=0;i<dc.bonusCard;i++)draw('e');aiOpeningMulligan();$('#menu').classList.add('hidden');$('#editor').classList.add('hidden');$('#game').classList.remove('hidden');$('#back').classList.remove('hidden');$('#over').className='overlay';$('#heroName').textContent=FACTIONS[f].hero;$('#enemyName').textContent=FACTIONS[ef].name;$('#enemyType').textContent='AI';$('#aiDiffBadge').textContent='['+dc.name+']';$('#log').innerHTML='';lg('전투 준비 · 상대 '+FACTIONS[ef].name+' · AI '+dc.name+(dc.bonusCard?' · AI 시작 패 +'+dc.bonusCard:''));render();setTimeout(()=>showMulligan('single'),80)}window.startGame=startGame;
 function spend(c){let i=S.p.hand.findIndex(x=>x.u===c.u);if(i>=0){S.p.mana-=c.c;S.p.hand.splice(i,1)}}
 function markPlayed(side){S[side].played=(S[side].played||0)+1}
 const enemyTargetSpells=new Set(['damage','freeze','sheep','destroy','executeHp','executeAtk','drain','bloodBolt','beastHunt','dragonDamage','dragonJudgment']);
@@ -482,7 +513,7 @@ function aiCardScore(c){let think=DIFF[S.difficulty||difficulty].think,score=c.c
 function enemyTurn(){let dc=DIFF[S.difficulty||difficulty];S.e.played=0;S.e.nextBuff=0;S.e.max=Math.min(10,S.e.max+1+(S.firstAI?dc.bonusMana:0));S.e.mana=S.e.max;if(S.firstAI)S.firstAI=false;else draw('e');S.e.field.forEach(x=>{if(x.frozen){x.frozen=0;x.ready=false}else x.ready=true;x.actedThisTurn=false});clean();render();let loops=0;while(loops++<22){let playable=S.e.hand.filter(c=>c.c<=S.e.mana).sort((a,b)=>aiCardScore(b)-aiCardScore(a)),acted=false;for(let c of playable){if(c.type==='spell'){if(aiSpell(c)){sfx('spell');S.e.mana-=c.c;S.e.hand.splice(S.e.hand.indexOf(c),1);lg('적 '+c.n+' 사용');markPlayed('e');clean();acted=true;break}}else if(S.e.field.length<5){S.e.mana-=c.c;S.e.hand.splice(S.e.hand.indexOf(c),1);S.e.field.push(c);sfx('summon');summon('e',c);markPlayed('e');lg('적 '+c.n+' 소환');acted=true;break}}if(!acted)break}
  render();let attackers=[...S.e.field.filter(x=>x.ready)].sort((a,b)=>b.a-a.a),lethal=dc.think>=2&&aiCanLethal();for(let a of attackers){if(a.h<=0)continue;let taunts=S.p.field.filter(x=>x.taunt),cand=taunts.length?taunts:S.p.field;if(lethal&&!taunts.length){sfx('attack');damageHero('p',a.a);if(a.lifesteal)healHero('e',a.a,true);a.ready=false;a.actedThisTurn=true;lg('적 '+a.n+' → 영웅 '+a.a+' 피해');if(a.afterAttackFace&&a.h>0)damageHero('p',a.afterAttackFace);if(finish())return;render();continue}if(cand.length){let scored=cand.map(t=>{let shieldPenalty=t.shield?(dc.think>=2?18:25):0,kill=!t.shield&&a.a>=t.h,survive=a.shield?true:a.h>t.a,trade=kill?(survive?118:64):(-28);if(dc.think>=2&&kill)trade+=aiThreat(t)*1.3;if(dc.think>=2&&!survive&&!kill)trade-=28;if(dc.think>=3&&t.lifesteal)trade+=7;trade+=aiTargetScore(t)-a.c*.5-shieldPenalty;return [trade,t]}).sort((x,y)=>y[0]-x[0]);let threshold=dc.think===0?28:dc.think===1?38:dc.think===2?48:54;if(taunts.length||scored[0][0]>=threshold){let t=scored[0][1],ta=t.h,aa=a.h,barrierBlock=t.shield>0;sfx('attack');dealUnitDamage(t,a.a,'e',a);if(!barrierBlock)dealUnitDamage(a,t.a,'p',t);if(ta>0&&t.h<=0)onKill(a,'e');if(aa>0&&a.h<=0)onKill(t,'p');a.ready=false;a.actedThisTurn=true;lg('적 '+a.n+' → '+t.n);clean();if(a.afterAttackFace&&a.h>0)damageHero('p',a.afterAttackFace);if(finish())return;render();continue}}sfx('attack');damageHero('p',a.a);if(a.lifesteal)healHero('e',a.a,true);a.ready=false;a.actedThisTurn=true;lg('적 '+a.n+' → 영웅 '+a.a+' 피해');if(finish())return;render()}setTimeout(playerTurn,220)}
 function playerTurn(){sfx('turn');S.turn++;S.active='p';S.p.played=0;S.p.nextBuff=0;S.p.max=Math.min(10,S.p.max+1);S.p.mana=S.p.max;draw('p');S.p.field.forEach(x=>{if(x.frozen){x.frozen=0;x.ready=false}else x.ready=true;x.actedThisTurn=false});clean();render()}
-function menu(){hideMulligan();ONLINE=false;onlineSelected=null;pending=null;if(onlineWS){try{onlineWS.close()}catch(e){}onlineWS=null}S=null;$('#game').classList.add('hidden');$('#editor').classList.add('hidden');$('#onlineLobby').classList.add('hidden');$('#menu').classList.remove('hidden');$('#back').classList.add('hidden');$('#over').className='overlay';renderMenu()}window.menu=menu;
+function menu(){hideMulligan();startBgm('menu');setMusicLevel(.10);ONLINE=false;onlineSelected=null;pending=null;if(onlineWS){try{onlineWS.close()}catch(e){}onlineWS=null}S=null;$('#game').classList.add('hidden');$('#editor').classList.add('hidden');$('#onlineLobby').classList.add('hidden');$('#menu').classList.remove('hidden');$('#back').classList.add('hidden');$('#over').className='overlay';renderMenu()}window.menu=menu;
 $('#back').onclick=menu;$('#retry').onclick=()=>{if(ONLINE){$('#over').className='overlay';menu()}else startGame(chosen)};
 function openEditor(){$('#menu').classList.add('hidden');$('#game').classList.add('hidden');$('#editor').classList.remove('hidden');$('#back').classList.remove('hidden');renderEditor()}window.openEditor=openEditor;
 function editFaction(f){editF=f;renderEditor()}window.editFaction=editFaction;
