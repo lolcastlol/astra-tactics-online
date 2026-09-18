@@ -14,10 +14,10 @@ function shuffle(a){a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math
 function code6(){const abc="ABCDEFGHJKLMNPQRSTUVWXYZ23456789";let s="";for(let i=0;i<6;i++)s+=abc[Math.floor(Math.random()*abc.length)];return s}
 
 export class OnlineRoom extends DurableObject {
-  constructor(ctx,env){super(ctx,env);this.ctx=ctx;this.env=env;this.game=null;this.players={a:null,b:null};this.uid=1;
-    ctx.blockConcurrencyWhile(async()=>{let saved=await ctx.storage.get("room");if(saved){this.game=saved.game||null;this.players=saved.players||{a:null,b:null};this.uid=saved.uid||1}})
+  constructor(ctx,env){super(ctx,env);this.ctx=ctx;this.env=env;this.game=null;this.players={a:null,b:null};this.uid=1;this.nextStarter='a';
+    ctx.blockConcurrencyWhile(async()=>{let saved=await ctx.storage.get("room");if(saved){this.game=saved.game||null;this.players=saved.players||{a:null,b:null};this.uid=saved.uid||1;this.nextStarter=saved.nextStarter||'a'}})
   }
-  async save(){await this.ctx.storage.put("room",{game:this.game,players:this.players,uid:this.uid})}
+  async save(){await this.ctx.storage.put("room",{game:this.game,players:this.players,uid:this.uid,nextStarter:this.nextStarter})}
   sockets(){return this.ctx.getWebSockets()}
   isConnected(slot){return this.sockets().some(ws=>{try{return ws.deserializeAttachment()?.slot===slot}catch(e){return false}})}
   async fetch(req){
@@ -30,7 +30,7 @@ export class OnlineRoom extends DurableObject {
       if(!this.players.a||!this.isConnected("a"))slot="a";
       else if(!this.players.b||!this.isConnected("b"))slot="b";
       else return new Response("room full",{status:409});
-      this.players[slot]={key,ready:false,faction:null,deck:null};
+      this.players[slot]={key,ready:false,faction:null,deck:null,rematchReady:false};
     }
     const pair=new WebSocketPair(),client=pair[0],server=pair[1];
     this.ctx.acceptWebSocket(server);
@@ -46,7 +46,24 @@ export class OnlineRoom extends DurableObject {
     const att=ws.deserializeAttachment()||{},slot=att.slot;
     if(!slot||!this.players[slot])return;
     try{
-      if(a.type==="ready"){this.ready(slot,a);await this.save();this.broadcastLobby();if(this.players.a?.ready&&this.players.b?.ready&&!this.game){this.startGame();await this.save();this.event("click","시작 손패를 선택해 교체하세요.");this.sendStates()}return}
+      if(a.type==="ready"){
+        if(this.game&&!this.game.winner)return this.err(ws,"진행 중인 대전에서는 덱을 다시 선택할 수 없습니다.");
+        this.ready(slot,a);
+        if(this.game?.winner)this.players[slot].rematchReady=true;
+        await this.save();this.broadcastLobby();
+        if(this.players.a?.ready&&this.players.b?.ready&&!this.game){
+          const starter=this.nextStarter||'a';this.startGame(starter);this.nextStarter=this.other(starter);await this.save();this.event("click","시작 손패를 선택해 교체하세요.");this.sendStates();
+        }else if(this.game?.winner&&this.canRematch()){
+          const starter=this.nextStarter||'a';this.startGame(starter);this.nextStarter=this.other(starter);await this.save();this.event("turn","같은 방에서 재대결 시작 · 선공 교대");this.sendStates();
+        }
+        return;
+      }
+      if(a.type==="rematch"){
+        if(!this.game?.winner)return this.err(ws,"경기 종료 후 재대결할 수 있습니다.");
+        this.requestRematch(slot);await this.save();this.broadcastLobby();
+        if(this.canRematch()){const starter=this.nextStarter||'a';this.startGame(starter);this.nextStarter=this.other(starter);await this.save();this.event("turn","같은 방에서 재대결 시작 · 선공 교대");}
+        this.sendStates();return;
+      }
       if(!this.game)return this.err(ws,"아직 대전이 시작되지 않았습니다.");
       if(this.game.winner)return;
       if(a.type==="mulligan"){this.mulligan(slot,a);await this.save();this.sendStates();return}
@@ -67,7 +84,9 @@ export class OnlineRoom extends DurableObject {
   broadcast(obj){const s=JSON.stringify(obj);for(const ws of this.sockets())try{ws.send(s)}catch(e){}}
   event(sound,text){this.broadcast({type:"event",sound,text})}
   broadcastLobby(){this.broadcast({type:"lobby",players:{a:this.pubPlayer("a"),b:this.pubPlayer("b")}})}
-  pubPlayer(s){let p=this.players[s];return p?{connected:this.isConnected(s),ready:!!p.ready,faction:p.faction}:null}
+  pubPlayer(s){let p=this.players[s];return p?{connected:this.isConnected(s),ready:!!p.ready,faction:p.faction,rematchReady:!!p.rematchReady}:null}
+  requestRematch(slot){let p=this.players[slot];if(!p?.ready||!p.faction||!Array.isArray(p.deck)||p.deck.length!==30)throw Error("재대결할 덱 정보가 없습니다.");p.rematchReady=true}
+  canRematch(){return !!(this.game?.winner&&this.players.a?.rematchReady&&this.players.b?.rematchReady&&this.players.a?.ready&&this.players.b?.ready&&this.isConnected("a")&&this.isConnected("b"))}
   ready(slot,a){
     const f=String(a.faction||""),deck=Array.isArray(a.deck)?a.deck:[];
     if(!["knight","elf","mage","blood","undead","machine","beast","merc","dragon","angel","aberrant"].includes(f))throw Error("잘못된 진영입니다.");
@@ -77,10 +96,11 @@ export class OnlineRoom extends DurableObject {
     this.players[slot].ready=true;this.players[slot].faction=f;this.players[slot].deck=[...deck];
   }
   mk(id){let b=CARDS[id];return {...copy(b),base:id,u:"o"+this.uid++,ready:false,frozen:0,rebornUsed:false,maxh:b.h||0,shield:b.shield||0,actedThisTurn:false,_partyA:0,_partyH:0}}
-  startGame(){
+  startGame(starter='a'){
     const make=(s)=>({hp:40,max:0,mana:0,deck:shuffle(this.players[s].deck.map(id=>this.mk(id))),hand:[],field:[],grave:[],fatigue:0,faction:this.players[s].faction,firstTurn:true,played:0,nextBuff:0,mulliganDone:false});
-    this.game={turn:1,active:"a",phase:"mulligan",winner:null,log:[],a:make("a"),b:make("b")};
-    this.game.a.max=1;this.game.a.mana=1;this.game.a.firstTurn=false;
+    this.game={turn:1,active:starter,phase:"mulligan",winner:null,log:[],a:make("a"),b:make("b")};
+    this.game[starter].max=1;this.game[starter].mana=1;this.game[starter].firstTurn=false;
+    for(const s of ["a","b"]){if(this.players[s])this.players[s].rematchReady=false}
     for(let i=0;i<3;i++){this.draw("a");this.draw("b")}
   }
   mulligan(s,a){let p=this.game[s];if(this.game.phase!=="mulligan")throw Error("멀리건 단계가 아닙니다.");if(p.mulliganDone)throw Error("이미 멀리건을 완료했습니다.");let uids=Array.isArray(a.uids)?[...new Set(a.uids.map(String))].slice(0,3):[];let chosen=[];for(const u of uids){let c=p.hand.find(x=>x.u===u);if(c)chosen.push(c)}let set=new Set(chosen.map(c=>c.u));p.hand=p.hand.filter(c=>!set.has(c.u));for(let i=0;i<chosen.length;i++){if(p.deck.length)p.hand.push(p.deck.pop())}p.deck=shuffle([...p.deck,...chosen]);p.mulliganDone=true;this.addLog((s==="a"?"P1":"P2")+" 멀리건 완료"+(chosen.length?" · "+chosen.length+"장 교체":""));if(this.game.a.mulliganDone&&this.game.b.mulliganDone){this.game.phase="play";this.event("turn","온라인 대전 시작")}}
@@ -177,7 +197,7 @@ export class OnlineRoom extends DurableObject {
   endTurn(s){const n=this.other(s);this.game[s].nextBuff=0;for(const q of this.game[s].field)if(q.endHealWeak){let t=this.weakest(s);if(t)this.healUnit(t,q.endHealWeak)}this.processAberrantEnd(s);this.game[s].field.forEach(x=>{if(x.frozen)x.frozen=0});this.game.active=n;this.game.turn++;let p=this.game[n],first=!!p.firstTurn;p.played=0;p.nextBuff=0;p.max=Math.min(10,p.max+1);p.mana=p.max+(first?1:0);if(first){p.firstTurn=false;this.addLog((n==="a"?"P1":"P2")+" 후턴 보정 · 임시 마나 +1")}else this.draw(n);this.clean();this.checkWinner();if(this.game.winner)return;this.resetAberrantTurnFlags();p.field.forEach(x=>{x.ready=!x.frozen&&!x.bound;x.actedThisTurn=false});this.prepareShoggothTurn(n);this.event("turn",(n==="a"?"P1":"P2")+" 턴"+(first?" · 임시 마나 +1":""))}
   checkWinner(){if(this.game.a.hp<=0||this.game.b.hp<=0){if(this.game.a.hp<=0&&this.game.b.hp<=0)this.game.winner="draw";else this.game.winner=this.game.a.hp>0?"a":"b"}}
   publicCard(c){if(!c)return c;let x={...c};delete x.art;return x}
-  view(slot){const o=this.other(slot),me=this.game[slot],op=this.game[o];return {type:"state",started:true,phase:this.game.phase||"play",mulliganDone:!!me.mulliganDone,oppMulliganDone:!!op.mulliganDone,slot,turn:this.game.turn,turnMine:this.game.active===slot,winner:this.game.winner,me:{hp:me.hp,max:me.max,mana:me.mana,faction:me.faction,fatigue:me.fatigue,deckCount:me.deck.length,hand:me.hand.map(c=>this.publicCard(c)),field:me.field.map(c=>this.publicCard(c))},opp:{hp:op.hp,max:op.max,mana:op.mana,faction:op.faction,fatigue:op.fatigue,deckCount:op.deck.length,handCount:op.hand.length,field:op.field.map(c=>this.publicCard(c))},log:this.game.log}}
+  view(slot){const o=this.other(slot),me=this.game[slot],op=this.game[o],mp=this.players[slot],xp=this.players[o];return {type:"state",started:true,phase:this.game.phase||"play",mulliganDone:!!me.mulliganDone,oppMulliganDone:!!op.mulliganDone,slot,turn:this.game.turn,turnMine:this.game.active===slot,winner:this.game.winner,rematch:{meReady:!!mp?.rematchReady,oppReady:!!xp?.rematchReady,oppConnected:this.isConnected(o)},me:{hp:me.hp,max:me.max,mana:me.mana,faction:me.faction,fatigue:me.fatigue,deckCount:me.deck.length,hand:me.hand.map(c=>this.publicCard(c)),field:me.field.map(c=>this.publicCard(c))},opp:{hp:op.hp,max:op.max,mana:op.mana,faction:op.faction,fatigue:op.fatigue,deckCount:op.deck.length,handCount:op.hand.length,field:op.field.map(c=>this.publicCard(c))},log:this.game.log}}
   sendStates(){for(const ws of this.sockets()){try{let s=ws.deserializeAttachment()?.slot;if(s)ws.send(JSON.stringify(this.view(s)))}catch(e){}}}
 }
 
