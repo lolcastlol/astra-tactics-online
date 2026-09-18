@@ -19,7 +19,7 @@ export class OnlineRoom extends DurableObject {
   }
   async save(){await this.ctx.storage.put("room",{game:this.game,players:this.players,uid:this.uid,nextStarter:this.nextStarter})}
   sockets(){return this.ctx.getWebSockets()}
-  isConnected(slot){return this.sockets().some(ws=>{try{return ws.deserializeAttachment()?.slot===slot}catch(e){return false}})}
+  isConnected(slot){return this.sockets().some(ws=>{try{return (ws.readyState===undefined||ws.readyState===1)&&ws.deserializeAttachment()?.slot===slot}catch(e){return false}})}
   async fetch(req){
     if(req.headers.get("Upgrade")!=="websocket") return new Response("ASTRA online room");
     const url=new URL(req.url),key=(url.searchParams.get("key")||"").slice(0,100);
@@ -31,6 +31,17 @@ export class OnlineRoom extends DurableObject {
       else if(!this.players.b||!this.isConnected("b"))slot="b";
       else return new Response("room full",{status:409});
       this.players[slot]={key,ready:false,faction:null,deck:null,rematchReady:false};
+    }
+    // A reconnect with the same player key replaces the old socket for that slot.
+    // This prevents a half-dead WebSocket from lingering beside the fresh connection.
+    for(const old of this.sockets()){
+      try{
+        const oa=old.deserializeAttachment()||{};
+        if(oa.slot===slot&&oa.key===key){
+          try{old.send(JSON.stringify({type:"replaced"}))}catch(e){}
+          try{old.close(1000,"replaced")}catch(e){}
+        }
+      }catch(e){}
     }
     const pair=new WebSocketPair(),client=pair[0],server=pair[1];
     this.ctx.acceptWebSocket(server);
@@ -46,6 +57,15 @@ export class OnlineRoom extends DurableObject {
     const att=ws.deserializeAttachment()||{},slot=att.slot;
     if(!slot||!this.players[slot])return;
     try{
+      // Read-only connection health / resync messages. Never replay game actions.
+      if(a.type==="ping"){try{ws.send(JSON.stringify({type:"pong",t:a.t||0}))}catch(e){}return}
+      if(a.type==="sync"){
+        try{
+          if(this.game)ws.send(JSON.stringify(this.view(slot)));
+          else ws.send(JSON.stringify({type:"lobby",players:{a:this.pubPlayer("a"),b:this.pubPlayer("b")}}));
+        }catch(e){}
+        return;
+      }
       if(a.type==="ready"){
         if(this.game&&!this.game.winner)return this.err(ws,"진행 중인 대전에서는 덱을 다시 선택할 수 없습니다.");
         this.ready(slot,a);
@@ -198,7 +218,7 @@ export class OnlineRoom extends DurableObject {
   checkWinner(){if(this.game.a.hp<=0||this.game.b.hp<=0){if(this.game.a.hp<=0&&this.game.b.hp<=0)this.game.winner="draw";else this.game.winner=this.game.a.hp>0?"a":"b"}}
   publicCard(c){if(!c)return c;let x={...c};delete x.art;return x}
   view(slot){const o=this.other(slot),me=this.game[slot],op=this.game[o],mp=this.players[slot],xp=this.players[o];return {type:"state",started:true,phase:this.game.phase||"play",mulliganDone:!!me.mulliganDone,oppMulliganDone:!!op.mulliganDone,slot,turn:this.game.turn,turnMine:this.game.active===slot,winner:this.game.winner,rematch:{meReady:!!mp?.rematchReady,oppReady:!!xp?.rematchReady,oppConnected:this.isConnected(o)},me:{hp:me.hp,max:me.max,mana:me.mana,faction:me.faction,fatigue:me.fatigue,deckCount:me.deck.length,hand:me.hand.map(c=>this.publicCard(c)),field:me.field.map(c=>this.publicCard(c))},opp:{hp:op.hp,max:op.max,mana:op.mana,faction:op.faction,fatigue:op.fatigue,deckCount:op.deck.length,handCount:op.hand.length,field:op.field.map(c=>this.publicCard(c))},log:this.game.log}}
-  sendStates(){for(const ws of this.sockets()){try{let s=ws.deserializeAttachment()?.slot;if(s)ws.send(JSON.stringify(this.view(s)))}catch(e){}}}
+  sendStates(){for(const ws of this.sockets()){try{if(ws.readyState!==undefined&&ws.readyState!==1)continue;let s=ws.deserializeAttachment()?.slot;if(s)ws.send(JSON.stringify(this.view(s)))}catch(e){}}}
 }
 
 export default {
